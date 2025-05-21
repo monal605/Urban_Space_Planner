@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zone Map from CSV</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 100vh; /* Make map fill the viewport height */
+      width: 100%;  /* Make map fill the viewport width */
+    }
+        /* --- ADD THIS RULE --- */
+        df-messenger {
+      z-index: 1000; /* Ensure it's above Leaflet map */
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+    }
+    
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+<!-- Update this section -->
+<df-messenger
+  chat-title="Greenarea"
+  project-id="greenarea-lntd"  
+  agent-id="e657d6d6-9514-449a-b1a0-d2c9cca0913d"
+  language-code="en"
+></df-messenger>
+<!-- End of update -->
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- PapaParse for CSV reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+<script>
+  // Initialize the map centered on Bangalore
+  const map = L.map('map').setView([12.9716, 77.5946], 12); // Center coordinates and zoom level
+
+  // Add OpenStreetMap tile layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Define colors for different zones
+  // *** These keys MUST conceptually match the zone names in your CSV ***
+  const zoneColors = {
+    "Green Zone": "green",
+    "Yellow Zone": "yellow",
+    "Red Zone": "red",
+  };
+
+  // Load and parse the CSV file
+  Papa.parse("clustered_locations.csv", { // Make sure this filename is correct
+    header: true,        // Treat the first row as headers
+    download: true,      // Download the file if it's a URL (works for local paths too)
+    skipEmptyLines: true, // Ignore empty lines
+    complete: function(results) { // Callback function when parsing is done
+      const data = results.data; // Get the parsed data array
+
+      // Check if data was loaded
+      if (!data || data.length === 0) {
+          console.error("CSV data could not be loaded or is empty.");
+          alert("Error: Could not load location data from clustered_locations.csv");
+          return;
+      }
+
+      // Iterate over each row in the CSV data
+      data.forEach(row => {
+        // Check if essential columns exist and have values
+        if (!row.Latitude || !row.Longitude || !row.Zone) {
+            console.warn("Skipping row due to missing Latitude, Longitude, or Zone:", row);
+            return; // Skip this row if essential data is missing
+        }
+
+        // Parse latitude and longitude, handle potential errors
+        const lat = parseFloat(row.Latitude);
+        const lng = parseFloat(row.Longitude);
+
+        // Get the zone name, trim whitespace, AND convert to lowercase for matching
+        const zoneFromCSV = (row.Zone || "").trim(); // Handle potential undefined Zone
+        const lowerCaseZone = zoneFromCSV.toLowerCase();
+
+        // Validate parsed coordinates
+        if (isNaN(lat) || isNaN(lng)) {
+            console.warn(`Skipping row with invalid coordinates: Lat='${row.Latitude}', Lng='${row.Longitude}'`, row);
+            return; // Skip if coordinates are not valid numbers
+        }
+
+        // --- Color Lookup Logic (Case-Insensitive) ---
+        let markerColor = "gray"; // Default color if no match found
+
+        // Iterate through the keys in zoneColors and compare lowercase versions
+        for (const key in zoneColors) {
+            if (key.toLowerCase() === lowerCaseZone) {
+                markerColor = zoneColors[key]; // Assign the color from the original key
+                break; // Found a match, stop searching
+            }
+        }
+        // --- End Color Lookup ---
+
+
+        // *** DEBUGGING LINE: Check the values being processed ***
+        // *** LOOK AT THIS OUTPUT IN YOUR BROWSER'S F12 CONSOLE ***
+        console.log(`Place: ${row.Place || 'N/A'}, Raw Zone: '${row.Zone}', Lowercase Zone: '${lowerCaseZone}', Assigned Color: ${markerColor}`);
+
+
+        // Construct the content for the popup window
+        const popupContent = `
+          <strong>${row.Place || "Unknown Place"}</strong><br>
+          Zone: ${zoneFromCSV}<br> <!-- Display original zone name from CSV -->
+          Latitude: ${row["Latitude"] || 'N/A'}<br>
+          Longitude: ${row["Longitude"] || 'N/A'}<br>
+   
+        `;
+
+        // Create a circle marker for the location
+        L.circleMarker([lat, lng], {
+          radius: 8, // Size of the circle marker
+          fillColor: markerColor, // Use the determined markerColor
+          color: "#000", // Border color
+          weight: 1, // Border width
+          opacity: 1, // Border opacity
+          fillOpacity: 0.8 // Fill opacity
+        })
+        .bindPopup(popupContent) // Attach the popup to the marker
+        .addTo(map); // Add the marker to the map
+      });
+
+      console.log(`Successfully processed ${data.length} rows from CSV.`);
+
+    },
+    error: function(error) { // Callback function if there's an error parsing
+        console.error("Error parsing CSV:", error);
+        alert("Error parsing clustered_locations.csv. Please check the file format and console for details.");
+    }
+  });
+</script>
+
+</body>
+</html>
