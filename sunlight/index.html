@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Urban Green Space Planner - Sunlight Suitability Layer (Bangalore)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 250px;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #2196F3; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .legend { padding: 10px 0; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+        .color-box {
+            width: 20px; height: 20px; margin-right: 8px; border: 1px solid #999;
+        }
+        .plant-recommendations {
+            margin-top: 15px; font-size: 14px; display: none;
+        }
+        h3 { margin: 5px 0; font-size: 16px; }
+        select { width: 100%; padding: 5px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="control-panel">
+        <h3>Urban Green Space Planner</h3>
+        <div class="toggle-container">
+            <label class="toggle-switch">
+                <input type="checkbox" id="sunlight-toggle">
+                <span class="slider"></span>
+            </label>
+            <span>Show Sunlight Suitability</span>
+        </div>
+        <div class="legend" id="sunlight-legend" style="display: none;">
+            <div class="legend-item"><div class="color-box" style="background-color: #0571b0;"></div><span>Low Sunlight</span></div>
+            <div class="legend-item"><div class="color-box" style="background-color: #92c5de;"></div><span>Medium-Low</span></div>
+            <div class="legend-item"><div class="color-box" style="background-color: #f7f7f7;"></div><span>Medium</span></div>
+            <div class="legend-item"><div class="color-box" style="background-color: #f4a582;"></div><span>Medium-High</span></div>
+            <div class="legend-item"><div class="color-box" style="background-color: #ca0020;"></div><span>High Sunlight</span></div>
+        </div>
+        <div class="plant-recommendations" id="plant-recommendations">
+            <h3>Plant Recommendations</h3>
+            <p>Select a region on the map to see suitable plants</p>
+            <select id="plant-type">
+                <option value="all">All Types</option>
+                <option value="trees">Trees</option>
+                <option value="shrubs">Shrubs</option>
+                <option value="flowers">Flowers</option>
+                <option value="grasses">Grasses</option>
+            </select>
+            <div id="plant-list"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        const map = L.map('map').setView([12.9716, 77.5946], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        fetch('BBMP_with_sunlight.geojson')
+          .then(res => res.json())
+          .then(data => {
+            const sunlightLayer = L.geoJSON(data, {
+              style: feature => ({
+                fillColor: getSunlightColor(feature.properties.sunlight_score),
+                weight: 1,
+                opacity: 1,
+                color: '#444',
+                fillOpacity: 0.7
+              }),
+              onEachFeature: function(feature, layer) {
+                layer.on('click', function() {
+                  showPlantRecommendations(feature.properties.category);
+                });
+                layer.bindPopup(`
+                  <strong>Ward:</strong> ${feature.properties.ward_name || 'Unknown'}<br>
+                  <strong>Sunlight Score:</strong> ${feature.properties.sunlight_score}/100<br>
+                  <strong>Category:</strong> ${feature.properties.category} Sunlight<br>
+                  <em>Click for plant recommendations</em>
+                `);
+              }
+            });
+
+            document.getElementById('sunlight-toggle').addEventListener('change', function() {
+              if (this.checked) {
+                sunlightLayer.addTo(map);
+                document.getElementById('sunlight-legend').style.display = 'block';
+                document.getElementById('plant-recommendations').style.display = 'block';
+              } else {
+                map.removeLayer(sunlightLayer);
+                document.getElementById('sunlight-legend').style.display = 'none';
+                document.getElementById('plant-recommendations').style.display = 'none';
+              }
+            });
+          });
+
+        function getSunlightColor(score) {
+            if (score >= 80) return '#ca0020';
+            if (score >= 60) return '#f4a582';
+            if (score >= 40) return '#f7f7f7';
+            if (score >= 20) return '#92c5de';
+            return '#0571b0';
+        }
+
+        const plantDatabase = {
+            "High": [
+                { name: "Butterfly Weed", type: "flowers", desc: "Full sun, drought tolerant" },
+                { name: "Black-eyed Susan", type: "flowers", desc: "Thrives in full sun" },
+                { name: "Honey Locust", type: "trees", desc: "Tolerates urban conditions" },
+                { name: "Little Bluestem", type: "grasses", desc: "Sun-loving native grass" }
+            ],
+            "Medium-High": [
+                { name: "Eastern Redbud", type: "trees", desc: "Prefers partial shade" },
+                { name: "Purple Coneflower", type: "flowers", desc: "Adaptable to many conditions" },
+                { name: "Red Twig Dogwood", type: "shrubs", desc: "Sun to partial shade" },
+                { name: "Switch Grass", type: "grasses", desc: "Versatile ornamental grass" }
+            ],
+            "Medium": [
+                { name: "Oakleaf Hydrangea", type: "shrubs", desc: "Adaptable to sun/shade" },
+                { name: "Virginia Bluebells", type: "flowers", desc: "Spring ephemeral" },
+                { name: "American Hornbeam", type: "trees", desc: "Understory tree" },
+                { name: "Pennsylvania Sedge", type: "grasses", desc: "Shade-tolerant groundcover" }
+            ],
+            "Medium-Low": [
+                { name: "Heuchera", type: "flowers", desc: "Shade-loving perennial" },
+                { name: "Bottlebrush Buckeye", type: "shrubs", desc: "Prefers shade" },
+                { name: "Eastern Hemlock", type: "trees", desc: "Shade-tolerant evergreen" },
+                { name: "Christmas Fern", type: "flowers", desc: "Evergreen fern for shade" }
+            ],
+            "Low": [
+                { name: "Japanese Forest Grass", type: "grasses", desc: "Beautiful in deep shade" },
+                { name: "Maidenhair Fern", type: "flowers", desc: "Delicate shade fern" },
+                { name: "Dwarf Fothergilla", type: "shrubs", desc: "Adaptable to low light" },
+                { name: "Canadian Yew", type: "shrubs", desc: "Shade-tolerant evergreen" }
+            ]
+        };
+
+        function showPlantRecommendations(category) {
+            const plantList = document.getElementById('plant-list');
+            const plantType = document.getElementById('plant-type').value;
+            let plants = plantDatabase[category] || [];
+
+            if (plantType !== 'all') {
+                plants = plants.filter(p => p.type === plantType);
+            }
+
+            plantList.innerHTML = `<h4>${category} Sunlight Area Plants:</h4>`;
+
+            if (plants.length === 0) {
+                plantList.innerHTML += `<p>No ${plantType} plants found for this sunlight level.</p>`;
+            } else {
+                const list = document.createElement('ul');
+                plants.forEach(p => {
+                    const item = document.createElement('li');
+                    item.innerHTML = `<strong>${p.name}</strong> - ${p.desc}`;
+                    list.appendChild(item);
+                });
+                plantList.appendChild(list);
+            }
+        }
+
+        document.getElementById('plant-type').addEventListener('change', function() {
+            const categoryText = document.querySelector('#plant-list h4');
+            if (categoryText) {
+                const category = categoryText.textContent.split(' ')[0];
+                showPlantRecommendations(category);
+            }
+        });
+
+        document.getElementById('plant-list').innerHTML = '<p>Select a region on the map to see suitable plants</p>';
+    </script>
+</body>
+</html>
