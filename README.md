@@ -1,70 +1,69 @@
-# Green Space Optimizer
-
-**Green Space Optimizer** is a web-based tool designed to visualize, analyze, and recommend optimal green spaces across Bangalore. Using geospatial data and clustering algorithms, this platform empowers urban planners, researchers, and citizens to make informed decisions for sustainable city development.
+Alright, you want something **in between**: not as long as the first rewrite, but more detailed than the short version. Here's a balanced version:
 
 ---
 
-## ✨ Features
+# Urban Space Planner
 
-* 📍 **Interactive Mapping**: Visualize localities using coloured map overlays and pollution hotspots.
-* 🔬 **Data Clustering**: KMeans clustering applied on localities to identify green-deficient zones.
-* 📈 **Pollution Analytics**: Integrated PM2.5-based pollution heatmap with location-level CSV data.
-* 🏛 **Sunlight-Based Analysis**: Evaluate sunlight data for photosynthesis viability in green planning.
-* 💻 **Modular Interface**: Individual dashboards for mapping, pollution, and sunlight factors.
+**Urban Space Planner** is a web-based platform that helps visualize, analyze, and recommend optimal green spaces for urban areas. Using geospatial data and clustering algorithms, it enables urban planners, researchers, and citizens to make data-driven decisions for sustainable city development.
 
 ---
 
-## 🔧 Tech Stack
+## Features
 
-* **Frontend**: HTML, CSS, JS
-* **Backend Scripts**: Python (for data processing and clustering)
-* **Visualization**: GeoJSON, Leaflet.js, Matplotlib
-* **Data**: CSVs with real Bangalore location data
+* **Interactive Mapping** – Visualize localities with color-coded overlays and pollution hotspots.
+* **K-Means Clustering** – Identify green-deficient zones through data-driven clustering.
+* **Pollution Analytics** – PM2.5-based heatmaps using real urban datasets.
+* **Sunlight Analysis** – Assess sunlight exposure to guide future green space planning.
+* **Modular Dashboards** – Separate dashboards for mapping, pollution, and sunlight factors.
 
 ---
 
-## 📖 Structure Overview
+## Tech Stack
+
+* **Frontend:** HTML, CSS, JavaScript
+* **Backend Scripts:** Python (data processing & clustering)
+* **Visualization:** Leaflet.js, GeoJSON, Matplotlib
+* **Data:** CSV datasets of urban locations
+
+---
+
+## Project Structure
 
 ```
-Urban-Space/
-├── mapping/               # Locality clustering & visualizations
-├── pollution/             # PM2.5-based analysis with app.js
-├── sunlight/              # Future scope: sunlight-based green scoring
-├── index.html             # Project homepage
-├── portal.html            # Dashboard portal
-├── kmeans.py              # Core clustering logic
-└── *.csv / *.txt          # Supporting datasets and summaries
+Urban-Space-Planner/
+├── mapping/       # Locality clustering & visualizations
+├── pollution/     # PM2.5-based analysis
+├── sunlight/      # Sunlight scoring (future scope)
+├── index.html     # Landing page
+├── portal.html    # Dashboard portal
+├── kmeans.py      # Core clustering logic
+└── *.csv / *.txt  # Supporting datasets
 ```
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ```bash
-# Clone the repo
-$ git clone https://github.com/Navya-Devv/Green-Space-Optimizer.git
+# Clone the repository
+git clone https://github.com/monal605/Urban_Space_Planner.git
 
-# Navigate into modules like mapping/
-$ open mapping/index.html  # or just drag into a browser
+# Open modules in a browser
+open mapping/index.html
 ```
 
-> ⚠️ Note: Some data-intensive views may require local hosting or lightweight servers.
+> For some views, you may need a local server (e.g., `python -m http.server`).
 
 ---
 
-## 📊 Use Cases
+## Use Cases
 
-* Urban policy research
+* Urban planning and policy research
 * Smart city dashboards
-* Environmental impact studies
-* Academic data science projects
+* Environmental studies
+* Academic projects
 
----
+<img width="1900" height="900" alt="image" src="https://github.com/user-attachments/assets/507e86f5-3b1d-4306-a95a-8c923d1f5131" />
+<img width="1907" height="911" alt="image" src="https://github.com/user-attachments/assets/9909bd9e-a000-4b8a-b394-71d526fc8d20" />
+<img width="1918" height="912" alt="image" src="https://github.com/user-attachments/assets/92cf052d-57da-49b0-8e52-9e0a63a6f5a0" />
 
-## 📄 License
-
-This project is open-sourced under the MIT License.
-
----
-
-Made with ❤️ for sustainability.
