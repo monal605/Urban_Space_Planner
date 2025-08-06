@@ -1,7 +1,3 @@
-Alright, you want something **in between**: not as long as the first rewrite, but more detailed than the short version. Here's a balanced version:
-
----
-
 # Urban Space Planner
 
 **Urban Space Planner** is a web-based platform that helps visualize, analyze, and recommend optimal green spaces for urban areas. Using geospatial data and clustering algorithms, it enables urban planners, researchers, and citizens to make data-driven decisions for sustainable city development.
